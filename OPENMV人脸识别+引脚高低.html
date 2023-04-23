@@ -1,0 +1,151 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OPENMV人脸识别+引脚高低</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__html"><p>额，直接开始吧！</p>
+<h1><a id="_1"></a>一、项目介绍</h1>
+<p>就是识别到人脸，之后引脚电平产生变化。使用LBP特征算法</p>
+<h1><a id="_3"></a>二、项目准备</h1>
+<p>硬件：openmv<br>
+软件：openmv ide</p>
+<h1><a id="_6"></a>三、流程</h1>
+<h2><a id="1_7"></a>1.采集人脸图像</h2>
+<p>第一步：先插入内存卡到openmv<br>
+第二部：在openmv内创建文件夹，命名为singtown，然后在singtown文件夹中再新建n个名为s1,s2,s3…sn的子文件夹（想识别几个就创建几个）<br>
+第三步：使用下面这个脚本采集图片（num 值需要更改），<a href="https://singtown.com/learn/50033/">这里</a>也有视频</p>
+<pre><code class="prism language-python"><span class="token comment"># Snapshot Example</span>
+<span class="token comment">#</span>
+<span class="token comment"># Note: You will need an SD card to run this example.</span>
+<span class="token comment">#</span>
+<span class="token comment"># You can use your OpenMV Cam to save image files.</span>
+
+<span class="token keyword">import</span> sensor<span class="token punctuation">,</span> image<span class="token punctuation">,</span> pyb
+
+RED_LED_PIN <span class="token operator">=</span> <span class="token number">1</span>
+BLUE_LED_PIN <span class="token operator">=</span> <span class="token number">3</span>
+
+sensor<span class="token punctuation">.</span>reset<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token comment"># Initialize the camera sensor.</span>
+sensor<span class="token punctuation">.</span>set_pixformat<span class="token punctuation">(</span>sensor<span class="token punctuation">.</span>GRAYSCALE<span class="token punctuation">)</span> <span class="token comment"># or sensor.GRAYSCALE</span>
+sensor<span class="token punctuation">.</span>set_framesize<span class="token punctuation">(</span>sensor<span class="token punctuation">.</span>B128X128<span class="token punctuation">)</span> <span class="token comment"># or sensor.QQVGA (or others)</span>
+sensor<span class="token punctuation">.</span>set_windowing<span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token number">92</span><span class="token punctuation">,</span><span class="token number">112</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+sensor<span class="token punctuation">.</span>skip_frames<span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">)</span> <span class="token comment"># Let new settings take affect.</span>
+sensor<span class="token punctuation">.</span>skip_frames<span class="token punctuation">(</span>time <span class="token operator">=</span> <span class="token number">2000</span><span class="token punctuation">)</span>
+
+num <span class="token operator">=</span> <span class="token number">1</span> <span class="token comment">#设置被拍摄者序号，第一个人的图片保存到s1文件夹，第二个人的图片保存到s2文件夹，以此类推。每次更换拍摄者时，修改num值。</span>
+
+n <span class="token operator">=</span> <span class="token number">20</span> <span class="token comment">#设置每个人拍摄图片数量。</span>
+
+<span class="token comment">#连续拍摄n张照片，每间隔3s拍摄一次。</span>
+<span class="token keyword">while</span><span class="token punctuation">(</span>n<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token comment">#红灯亮</span>
+    pyb<span class="token punctuation">.</span>LED<span class="token punctuation">(</span>RED_LED_PIN<span class="token punctuation">)</span><span class="token punctuation">.</span>on<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    sensor<span class="token punctuation">.</span>skip_frames<span class="token punctuation">(</span>time <span class="token operator">=</span> <span class="token number">3000</span><span class="token punctuation">)</span> <span class="token comment"># Give the user time to get ready.等待3s，准备一下表情。</span>
+
+    <span class="token comment">#红灯灭，蓝灯亮</span>
+    pyb<span class="token punctuation">.</span>LED<span class="token punctuation">(</span>RED_LED_PIN<span class="token punctuation">)</span><span class="token punctuation">.</span>off<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    pyb<span class="token punctuation">.</span>LED<span class="token punctuation">(</span>BLUE_LED_PIN<span class="token punctuation">)</span><span class="token punctuation">.</span>on<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+    <span class="token comment">#保存截取到的图片到SD卡</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>n<span class="token punctuation">)</span>
+    sensor<span class="token punctuation">.</span>snapshot<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>save<span class="token punctuation">(</span><span class="token string">"singtown/s%s/%s.pgm"</span> <span class="token operator">%</span> <span class="token punctuation">(</span>num<span class="token punctuation">,</span> n<span class="token punctuation">)</span> <span class="token punctuation">)</span> <span class="token comment"># or "example.bmp" (or others)</span>
+
+    n <span class="token operator">-=</span> <span class="token number">1</span>
+
+    pyb<span class="token punctuation">.</span>LED<span class="token punctuation">(</span>BLUE_LED_PIN<span class="token punctuation">)</span><span class="token punctuation">.</span>off<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"Done! Reset the camera to see the saved image."</span><span class="token punctuation">)</span>
+</code></pre>
+<h2><a id="2_54"></a>2.使用引脚高低电平</h2>
+<p><img src="https://img-blog.csdnimg.cn/02f69113a8b446109e79def606883796.png?x-oss-process=image/watermark,type_d3F5LXplbmhlaQ,shadow_50,text_Q1NETiBATXJsaTA1MzA=,size_20,color_FFFFFF,t_70,g_se,x_16" alt="在这里插入图片描述"><br>
+以使用P0口为例，</p>
+<pre><code class="prism language-python"><span class="token keyword">from</span> pyb <span class="token keyword">import</span> Pin
+
+p_out <span class="token operator">=</span> Pin<span class="token punctuation">(</span><span class="token string">'P0'</span><span class="token punctuation">,</span> Pin<span class="token punctuation">.</span>OUT_PP<span class="token punctuation">)</span><span class="token comment">#设置p_out为输出引脚</span>
+p_out<span class="token punctuation">.</span>high<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token comment">#设置p_out引脚为高</span>
+p_out<span class="token punctuation">.</span>low<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token comment">#设置p_out引脚为低</span>
+
+</code></pre>
+<p>这样，识别到对用的人脸后，就OK了</p>
+<h1><a id="_67"></a>三、整体程序</h1>
+<pre><code class="prism language-python"><span class="token keyword">import</span> sensor<span class="token punctuation">,</span> time<span class="token punctuation">,</span> image<span class="token punctuation">,</span> pyb
+p <span class="token operator">=</span> pyb<span class="token punctuation">.</span>Pin<span class="token punctuation">(</span><span class="token string">"P0"</span><span class="token punctuation">,</span> pyb<span class="token punctuation">.</span>Pin<span class="token punctuation">.</span>OUT_PP<span class="token punctuation">)</span>
+sensor<span class="token punctuation">.</span>reset<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token comment"># Initialize the camera sensor.</span>
+sensor<span class="token punctuation">.</span>set_pixformat<span class="token punctuation">(</span>sensor<span class="token punctuation">.</span>GRAYSCALE<span class="token punctuation">)</span> <span class="token comment"># or sensor.GRAYSCALE</span>
+sensor<span class="token punctuation">.</span>set_framesize<span class="token punctuation">(</span>sensor<span class="token punctuation">.</span>B128X128<span class="token punctuation">)</span> <span class="token comment"># or sensor.QQVGA (or others)</span>
+sensor<span class="token punctuation">.</span>set_windowing<span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token number">92</span><span class="token punctuation">,</span><span class="token number">112</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+sensor<span class="token punctuation">.</span>skip_frames<span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">)</span> <span class="token comment"># Let new settings take affect.</span>
+sensor<span class="token punctuation">.</span>skip_frames<span class="token punctuation">(</span>time <span class="token operator">=</span> <span class="token number">5000</span><span class="token punctuation">)</span> <span class="token comment">#等待5s</span>
+NUM_SUBJECTS <span class="token operator">=</span> <span class="token number">4</span> <span class="token comment">#图像库中不同人数，一共6人</span>
+NUM_SUBJECTS_IMGS <span class="token operator">=</span> <span class="token number">20</span> <span class="token comment">#每人有20张样本图片</span>
+img <span class="token operator">=</span> sensor<span class="token punctuation">.</span>snapshot<span class="token punctuation">(</span><span class="token punctuation">)</span>
+d0 <span class="token operator">=</span> img<span class="token punctuation">.</span>find_lbp<span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> img<span class="token punctuation">.</span>width<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> img<span class="token punctuation">.</span>height<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+img <span class="token operator">=</span> <span class="token boolean">None</span>
+pmin <span class="token operator">=</span> <span class="token number">999999</span>
+num<span class="token operator">=</span><span class="token number">0</span>
+<span class="token keyword">def</span> <span class="token function">min</span><span class="token punctuation">(</span>pmin<span class="token punctuation">,</span> a<span class="token punctuation">,</span> s<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">global</span> num
+    <span class="token keyword">if</span> a<span class="token operator">&lt;</span>pmin<span class="token punctuation">:</span>
+        pmin<span class="token operator">=</span>a
+        num<span class="token operator">=</span>s
+    <span class="token keyword">return</span> pmin
+<span class="token keyword">while</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+  img <span class="token operator">=</span> sensor<span class="token punctuation">.</span>snapshot<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token comment">#img = image.Image("singtown/%s/1.pgm"%(SUB))</span>
+  d0 <span class="token operator">=</span> img<span class="token punctuation">.</span>find_lbp<span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> img<span class="token punctuation">.</span>width<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> img<span class="token punctuation">.</span>height<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+  <span class="token keyword">for</span> s <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> NUM_SUBJECTS<span class="token operator">+</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+      dist <span class="token operator">=</span> <span class="token number">0</span>
+      <span class="token keyword">for</span> i <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">,</span> NUM_SUBJECTS_IMGS<span class="token operator">+</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+          img <span class="token operator">=</span> image<span class="token punctuation">.</span>Image<span class="token punctuation">(</span><span class="token string">"singtown/s%d/%d.pgm"</span><span class="token operator">%</span><span class="token punctuation">(</span>s<span class="token punctuation">,</span> i<span class="token punctuation">)</span><span class="token punctuation">)</span>
+          d1 <span class="token operator">=</span> img<span class="token punctuation">.</span>find_lbp<span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> img<span class="token punctuation">.</span>width<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> img<span class="token punctuation">.</span>height<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+          <span class="token comment">#d1为第s文件夹中的第i张图片的lbp特征</span>
+          dist <span class="token operator">+=</span> image<span class="token punctuation">.</span>match_descriptor<span class="token punctuation">(</span>d0<span class="token punctuation">,</span> d1<span class="token punctuation">)</span><span class="token comment">#计算d0 d1即样本图像与被检测人脸的特征差异度。</span>
+      <span class="token comment">#print("Average dist for subject %d: %d"%(s, dist/NUM_SUBJECTS_IMGS))</span>
+          pmin <span class="token operator">=</span> <span class="token builtin">min</span><span class="token punctuation">(</span>pmin<span class="token punctuation">,</span> dist<span class="token operator">/</span>NUM_SUBJECTS_IMGS<span class="token punctuation">,</span> s<span class="token punctuation">)</span><span class="token comment">#特征差异度越小，被检测人脸与此样本更相似更匹配。</span>
+      <span class="token comment">#print(pmin)</span>
+  
+  <span class="token keyword">print</span><span class="token punctuation">(</span>num<span class="token punctuation">)</span> <span class="token comment"># num为当前最匹配的人的编号。</span>
+  <span class="token keyword">if</span> num<span class="token operator">==</span><span class="token number">1</span><span class="token punctuation">:</span>
+      <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"linyuner"</span><span class="token punctuation">)</span>
+      p<span class="token punctuation">.</span>high<span class="token punctuation">(</span><span class="token punctuation">)</span>
+      img <span class="token operator">=</span> <span class="token boolean">None</span>
+      pmin <span class="token operator">=</span> <span class="token number">999999</span>
+      num<span class="token operator">=</span><span class="token number">0</span>
+      sensor<span class="token punctuation">.</span>skip_frames<span class="token punctuation">(</span>time <span class="token operator">=</span> <span class="token number">500</span><span class="token punctuation">)</span> <span class="token comment">#等待5s</span>
+  <span class="token keyword">if</span> num<span class="token operator">==</span><span class="token number">2</span><span class="token punctuation">:</span>
+      <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"jialing"</span><span class="token punctuation">)</span>
+      p<span class="token punctuation">.</span>low<span class="token punctuation">(</span><span class="token punctuation">)</span>
+      img <span class="token operator">=</span> <span class="token boolean">None</span>
+      pmin <span class="token operator">=</span> <span class="token number">999999</span>
+      num<span class="token operator">=</span><span class="token number">0</span>
+      sensor<span class="token punctuation">.</span>skip_frames<span class="token punctuation">(</span>time <span class="token operator">=</span> <span class="token number">500</span><span class="token punctuation">)</span> <span class="token comment">#等待5s</span>
+  <span class="token keyword">if</span> num<span class="token operator">==</span><span class="token number">3</span><span class="token punctuation">:</span>
+      <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"huangbo"</span><span class="token punctuation">)</span>
+      img <span class="token operator">=</span> <span class="token boolean">None</span>
+      pmin <span class="token operator">=</span> <span class="token number">999999</span>
+      num<span class="token operator">=</span><span class="token number">0</span>
+      p<span class="token punctuation">.</span>low<span class="token punctuation">(</span><span class="token punctuation">)</span>
+      sensor<span class="token punctuation">.</span>skip_frames<span class="token punctuation">(</span>time <span class="token operator">=</span> <span class="token number">500</span><span class="token punctuation">)</span> <span class="token comment">#等待5s</span>
+  <span class="token keyword">if</span> num<span class="token operator">==</span><span class="token number">4</span><span class="token punctuation">:</span>
+      <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"mobuyi"</span><span class="token punctuation">)</span>
+      img <span class="token operator">=</span> <span class="token boolean">None</span>
+      pmin <span class="token operator">=</span> <span class="token number">999999</span>
+      num<span class="token operator">=</span><span class="token number">0</span>
+      p<span class="token punctuation">.</span>low<span class="token punctuation">(</span><span class="token punctuation">)</span>
+      sensor<span class="token punctuation">.</span>skip_frames<span class="token punctuation">(</span>time <span class="token operator">=</span> <span class="token number">500</span><span class="token punctuation">)</span> <span class="token comment">#等待5s</span>
+  <span class="token keyword">if</span> num<span class="token operator">==</span><span class="token number">0</span><span class="token punctuation">:</span>
+    img <span class="token operator">=</span> sensor<span class="token punctuation">.</span>snapshot<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token comment">#img = image.Image("singtown/%s/1.pgm"%(SUB))</span>
+    d0 <span class="token operator">=</span> img<span class="token punctuation">.</span>find_lbp<span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">,</span> img<span class="token punctuation">.</span>width<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> img<span class="token punctuation">.</span>height<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    sensor<span class="token punctuation">.</span>skip_frames<span class="token punctuation">(</span>time <span class="token operator">=</span> <span class="token number">1500</span><span class="token punctuation">)</span> <span class="token comment">#等待5s</span>
+</code></pre>
+<p>结果测试通过，整体帧率较低，是openmv原因，控制下图片数量就会达最佳效果。</p>
+</div>
+</body>
+
+</html>
